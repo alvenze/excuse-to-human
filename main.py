@@ -40,11 +40,23 @@ def output_path() -> Path:
         return local / "entry.txt"
 
 
+def check(path: Path) -> None:
+    """Re-read the written file from disk and verify it byte for byte,
+    so a truncated or mangled write can never reach the gate quietly."""
+    raw = path.read_bytes()
+    if raw != EXCUSE.encode("utf-8"):
+        raise ValueError(f"{path} does not match the excuse byte for byte")
+    validate(raw.decode("utf-8"))
+    print(f"check ok: {path} matches, {len(raw)} bytes")
+
+
 def main(argv: list[str]) -> None:
     validate(EXCUSE)
     path = output_path()
     path.write_text(EXCUSE, encoding="utf-8")
     print(f"wrote {len(EXCUSE)} chars to {path}")
+    if "--check" in argv:
+        check(path)
 
 
 if __name__ == "__main__":
